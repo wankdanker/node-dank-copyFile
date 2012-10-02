@@ -1,0 +1,23 @@
+{
+  "name": "dank-copyfile",
+  "version": "0.0.1",
+  "description": "A pure JavaScript copyFile function",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "nodeunit test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/wankdanker/node-dank-copyFile.git"
+  },
+  "keywords": [
+    "copy",
+    "file",
+    "copyFile"
+  ],
+  "author": "Dan VerWeire",
+  "license": "MIT"
+}
