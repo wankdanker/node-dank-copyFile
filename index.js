@@ -9,7 +9,7 @@ if (process.argv[1] === __filename) {
 module.exports = copyFile;
 
 function copyFile (from, to, callback) {
-	var source, destination, calledBack = false, errors = [], tmpTo;
+	var source, destination, calledBack = false, errors = [], tmpTo, reading, writing;
 	
 	if (!(from && to)) {
 		return callback(Error('Source and destination arguments are required to copyFile.'));
@@ -22,24 +22,31 @@ function copyFile (from, to, callback) {
 	destination = fs.createWriteStream(tmpTo);
 	
 	source.on('end', function () {
-		source.destroy();
-		destination.destroySoon();
+		reading = false;
 	});
 	
+	destination.on('finish', function () {
+		writing = false;
+	});
+
 	source.on('close', maybeCallback);
 	source.on('error', handleError);
-	
+
 	destination.on('close', maybeCallback);
 	destination.on('error', handleError);
-	
+
+	reading = true;
+	writing = true;
 	source.pipe(destination);
-	
+
 	function handleError(err) {
 		if (err) {
 			errors.push(err);
 			
-			source.destroy();
-			destination.destroy();
+			source.close();
+			destination.close();
+
+			maybeCallback();
 		}
 	}
 	
@@ -47,7 +54,7 @@ function copyFile (from, to, callback) {
 		if (calledBack) {
 			return;
 		}
-		
+		//check to see if any errors have occurred
 		if (errors.length) {
 			calledBack = true;
 			
@@ -55,9 +62,13 @@ function copyFile (from, to, callback) {
 				callback(errors[0]);
 			});
 		}
-		else if (!source.readable && !destination.writable) {
+		//no errors have occurred so...
+		//check to see if the streams are no longer readable/writable
+		//indicating that everything is done
+		else if (!reading && !writing) {
 			calledBack = true;
-			
+
+			//rename the temp file to the real file
 			fs.rename(tmpTo, to, callback);
 		}
 	}
